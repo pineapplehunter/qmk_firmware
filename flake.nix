@@ -1,7 +1,7 @@
 {
   description = "qmk environment";
   inputs = {
-    nixpkgs.url = "nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "nixpkgs/master";
     poetry2nix.url = "github:nix-community/poetry2nix";
     flake-utils.url = "github:numtide/flake-utils";
     flake-compat = {
@@ -53,27 +53,52 @@
         ];
       in
       {
-        devShells.default = pkgs.mkShell {
-          name = "qmk-firmware";
+        devShells = {
+          default = pkgs.mkShell {
+            name = "qmk-firmware";
 
-          buildInputs = with pkgs; [ clang-tools dfu-programmer dfu-util diffutils git pythonEnv poetry nixpkgs-fmt ]
-          ++ lib.optional avr [
-            pkgsCross.avr.buildPackages.binutils
-            pkgsCross.avr.buildPackages.gcc8
-            avrlibc
-            avrdude
-          ]
-          ++ lib.optional arm [ gcc-arm-embedded ]
-          ++ lib.optional teensy [ teensy-loader-cli ];
+            buildInputs = with pkgs; [ clang-tools dfu-programmer dfu-util diffutils git pythonEnv poetry nixpkgs-fmt ]
+            ++ lib.optional avr [
+              pkgsCross.avr.buildPackages.binutils
+              pkgsCross.avr.buildPackages.gcc8
+              avrlibc
+              avrdude
+            ]
+            ++ lib.optional arm [ gcc-arm-embedded ]
+            ++ lib.optional teensy [ teensy-loader-cli ];
 
-          AVR_CFLAGS = pkgs.lib.optional avr avr_incflags;
-          AVR_ASFLAGS = pkgs.lib.optional avr avr_incflags;
-          shellHook = ''
-            # Prevent the avr-gcc wrapper from picking up host GCC flags
-            # like -iframework, which is problematic on Darwin
-            unset NIX_CFLAGS_COMPILE_FOR_TARGET
-          '';
+            AVR_CFLAGS = pkgs.lib.optional avr avr_incflags;
+            AVR_ASFLAGS = pkgs.lib.optional avr avr_incflags;
+            shellHook = ''
+              # Prevent the avr-gcc wrapper from picking up host GCC flags
+              # like -iframework, which is problematic on Darwin
+              unset NIX_CFLAGS_COMPILE_FOR_TARGET
+            '';
+          };
+
+          gcc12 = pkgs.mkShell {
+            name = "qmk-firmware-gcc12";
+
+            buildInputs = with pkgs; [ clang-tools dfu-programmer dfu-util diffutils git pythonEnv poetry nixpkgs-fmt ]
+            ++ lib.optional avr [
+              pkgsCross.avr.buildPackages.binutils
+              pkgsCross.avr.buildPackages.gcc12
+              avrlibc
+              avrdude
+            ]
+            ++ lib.optional arm [ gcc-arm-embedded ]
+            ++ lib.optional teensy [ teensy-loader-cli ];
+
+            AVR_CFLAGS = pkgs.lib.optional avr avr_incflags;
+            AVR_ASFLAGS = pkgs.lib.optional avr avr_incflags;
+            shellHook = ''
+              # Prevent the avr-gcc wrapper from picking up host GCC flags
+              # like -iframework, which is problematic on Darwin
+              unset NIX_CFLAGS_COMPILE_FOR_TARGET
+            '';
+          };
         };
+
       });
 
 }
